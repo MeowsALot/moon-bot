@@ -4,6 +4,9 @@ from discord.ext import commands, tasks
 import ephem
 from datetime import datetime, timezone
 from keep_alive import keep_alive
+import os
+print("BOT_TOKEN =", os.environ.get('BOT_TOKEN'))
+
 
 # Keep bot alive
 keep_alive()
