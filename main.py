@@ -59,7 +59,7 @@ async def currentmoon(ctx):
 @tasks.loop(minutes=60)
 async def daily_moon_post():
     try:
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)  # fixed timezone-aware datetime
         if now.hour == 12:
             channel = bot.get_channel(CHANNEL_ID)
             if channel:
