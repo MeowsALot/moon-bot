@@ -4,9 +4,6 @@ from discord.ext import commands, tasks
 import ephem
 from datetime import datetime, timezone
 from keep_alive import keep_alive
-import os
-print("BOT_TOKEN =", os.environ.get('BOT_TOKEN'))
-
 
 # Keep bot alive
 keep_alive()
@@ -17,8 +14,16 @@ intents.message_content = True
 bot = commands.Bot(command_prefix="!", intents=intents)
 
 # Environment variables
-BOT_TOKEN = os.environ['BOT_TOKEN']
-CHANNEL_ID = int(os.environ['CHANNEL_ID'])
+BOT_TOKEN = os.environ.get('BOT_TOKEN')
+CHANNEL_ID = os.environ.get('CHANNEL_ID')
+
+# Check environment variables
+if BOT_TOKEN is None:
+    raise ValueError("Environment variable BOT_TOKEN is missing!")
+if CHANNEL_ID is None:
+    raise ValueError("Environment variable CHANNEL_ID is missing!")
+
+CHANNEL_ID = int(CHANNEL_ID)
 
 # Functions
 def get_moon_phase():
@@ -50,16 +55,21 @@ async def currentmoon(ctx):
         await ctx.send("❌ Something went wrong showing the Moon.")
         print(f"Error in !currentmoon command: {e}")
 
-# Auto daily post at 12:00 UTC
+# Auto daily post at 12:00 UTC safely
 @tasks.loop(minutes=60)
 async def daily_moon_post():
-    now = datetime.utcnow()
-    if now.hour == 12:  # 12:00 UTC
-        channel = bot.get_channel(CHANNEL_ID)
-        if channel:
-            phase = get_moon_phase()
-            emoji = moon_emoji(phase)
-            await channel.send(f"🌙 Daily Moon Update: {emoji} ({phase:.1f}%)")
+    try:
+        now = datetime.utcnow()
+        if now.hour == 12:
+            channel = bot.get_channel(CHANNEL_ID)
+            if channel:
+                phase = get_moon_phase()
+                emoji = moon_emoji(phase)
+                await channel.send(f"🌙 Daily Moon Update: {emoji} ({phase:.1f}%)")
+            else:
+                print(f"Channel {CHANNEL_ID} not found!")
+    except Exception as e:
+        print(f"Error in daily_moon_post loop: {e}")
 
 @daily_moon_post.before_loop
 async def before_daily_moon_post():
