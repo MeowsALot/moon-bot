@@ -55,7 +55,7 @@ async def currentmoon(ctx):
         await ctx.send("❌ Something went wrong showing the Moon.")
         print(f"Error in !currentmoon command: {e}")
 
-# Auto daily post at 12:00 UTC safely
+# Daily moon post loop
 @tasks.loop(minutes=60)
 async def daily_moon_post():
     try:
@@ -75,12 +75,12 @@ async def daily_moon_post():
 async def before_daily_moon_post():
     await bot.wait_until_ready()
 
-daily_moon_post.start()
-
-# Ready event
+# Start daily loop safely after bot is ready
 @bot.event
 async def on_ready():
     print(f"{bot.user} is online!")
+    if not daily_moon_post.is_running():
+        daily_moon_post.start()
 
 # Run bot
 bot.run(BOT_TOKEN)
